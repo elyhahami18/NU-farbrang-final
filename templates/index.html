@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farbrang</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-book-open"></i> Nu!</h1>
+            <p>Our AI is specialized to answer questions about Chabad Chassidic texts (Tanya, Torah Ohr, The Gate of Unity, Derekh Mitzvotekha, etc), and is an expert at citing relevant sources. For best use, include in the prompt the desired text (and chapter if applicable) and the question you're interested in. </p>
+        </header>
+
+        <main>
+            <section class="sidebar left-sidebar">
+                <div class="process-info" id="processInfo">
+                    <h3>Processing Details</h3>
+                    <div class="info-content">
+                        <p>Ask a question to see processing details.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message system">
+                        <div class="message-content">
+                            <p>Nu, let's learn (and farbreng later)! Ask me any question about Jewish texts or Chassidic philosophy, for instance 'Explain chapter 7 of Tanya'.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input">
+                    <form id="questionForm">
+                        <button type="button" id="randomQuestionBtn" class="random-btn" title="Get a random thought-provoking question">
+                            <i class="fas fa-random"></i>
+                        </button>
+                        <input type="text" id="questionInput" placeholder="Type your question here..." autocomplete="off">
+                        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="sidebar right-sidebar">
+                <div class="example-questions">
+                    <h3>Example Questions</h3>
+                    <ul>
+                        {% for question in example_questions %}
+                        <li><a href="#" class="example-question">{{ question }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Powered by Gemini AI • Created for GENED 1188 • Ely Hahami & Levi Backman (2025)</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html> 
