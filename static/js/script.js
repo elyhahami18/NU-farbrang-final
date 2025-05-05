@@ -86,7 +86,10 @@ async function handleSubmit(e, exampleQuestion = null) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
+            credentials: 'same-origin',
+            mode: 'cors',
             body: JSON.stringify({ question }),
         });
         

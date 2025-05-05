@@ -4,6 +4,7 @@ import tiktoken
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
+import logging
 
 # Load environment variables
 load_dotenv()
@@ -24,19 +25,28 @@ TEXT_OPTIONS = ["Tanya", "Torah Ohr", "The Gate of Unity", "Derekh Mitzvotekha/H
 MAX_TOKENS = 250000
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)  # Enhanced CORS settings
 
 # Set debug mode
 app.debug = True
+
+# Configure logging
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)
+app.logger.addHandler(handler)
+app.logger.setLevel(logging.INFO)
 
 # Add a global error handler to catch all exceptions and return JSON
 @app.errorhandler(Exception)
 def handle_exception(e):
     app.logger.error(f"Unhandled exception: {str(e)}")
-    return jsonify({
+    response = jsonify({
         "error": f"Server error: {str(e)}",
         "success": False
-    }), 500
+    })
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Content-Type', 'application/json')
+    return response, 500
 
 def count_tokens(text):
     """Count the number of tokens in a text string using tiktoken."""
@@ -423,6 +433,75 @@ def ask():
     except Exception as e:
         app.logger.error(f"Exception in /ask route: {str(e)}")
         return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+@app.route('/status', methods=['GET'])
+def status():
+    return jsonify({
+        "status": "ok",
+        "success": True
+    })
+
+# Add verification route to check text file accessibility
+@app.route('/verify-texts', methods=['GET'])
+def verify_texts():
+    results = {}
+    
+    # Check base directory exists
+    if not os.path.exists(BASE_DIR):
+        return jsonify({
+            "error": f"Base directory not found: {BASE_DIR}",
+            "exists": False
+        }), 404
+    
+    # Check each text option directory
+    for source in TEXT_OPTIONS:
+        # Convert slashes if needed
+        if "/" in source:
+            clean_source = source.split("/")[0]  # Take part before slash
+        else:
+            clean_source = source
+            
+        source_path = os.path.join(BASE_DIR, clean_source)
+        file_count = 0
+        
+        try:
+            # Check if directory exists and contains txt files
+            if os.path.exists(source_path):
+                for root, dirs, files in os.walk(source_path):
+                    file_count += sum(1 for f in files if f.endswith('.txt'))
+                    
+                results[clean_source] = {
+                    "exists": True,
+                    "path": source_path,
+                    "file_count": file_count
+                }
+            else:
+                results[clean_source] = {
+                    "exists": False,
+                    "path": source_path,
+                    "file_count": 0
+                }
+        except Exception as e:
+            results[clean_source] = {
+                "exists": False,
+                "path": source_path,
+                "error": str(e)
+            }
+    
+    return jsonify({
+        "base_dir_exists": os.path.exists(BASE_DIR),
+        "base_dir": BASE_DIR,
+        "results": results
+    })
+
+# Add catch-all route to prevent HTML error pages for nonexistent routes
+@app.route('/<path:path>')
+def catch_all(path):
+    app.logger.warning(f"Attempt to access nonexistent route: {path}")
+    return jsonify({
+        "error": f"Route not found: /{path}",
+        "success": False
+    }), 404
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080))) 
