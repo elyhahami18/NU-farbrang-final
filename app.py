@@ -29,6 +29,15 @@ CORS(app)  # Enable CORS for all routes
 # Set debug mode
 app.debug = True
 
+# Add a global error handler to catch all exceptions and return JSON
+@app.errorhandler(Exception)
+def handle_exception(e):
+    app.logger.error(f"Unhandled exception: {str(e)}")
+    return jsonify({
+        "error": f"Server error: {str(e)}",
+        "success": False
+    }), 500
+
 def count_tokens(text):
     """Count the number of tokens in a text string using tiktoken."""
     try:
@@ -338,60 +347,82 @@ def answer_question_with_context(question, selected_source, text_content):
 
 @app.route('/')
 def index():
-    # Example questions
-    example_questions = [
-        "What is the concept of Tzimtzum in Chabad philosophy?",
-        "Explain the difference between Chochma and Bina according to the Tanya.",
-        "How does the Alter Rebbe explain the concept of אחדות ה׳ (Unity of God)?",
-        "What is the significance of the four worlds in Kabbalah?",
-        "Explain the concept of ביטול (self-nullification) in Chassidic thought."
-    ]
-    return render_template('index.html', example_questions=example_questions)
+    try:
+        # Example questions
+        example_questions = [
+            "What is the concept of Tzimtzum in Chabad philosophy?",
+            "Explain the difference between Chochma and Bina according to the Tanya.",
+            "How does the Alter Rebbe explain the concept of אחדות ה׳ (Unity of God)?",
+            "What is the significance of the four worlds in Kabbalah?",
+            "Explain the concept of ביטול (self-nullification) in Chassidic thought."
+        ]
+        return render_template('index.html', example_questions=example_questions)
+    except Exception as e:
+        app.logger.error(f"Error in index route: {str(e)}")
+        # Only return JSON if it was requested as JSON
+        if request.headers.get('Content-Type') == 'application/json':
+            return jsonify({"error": f"Server error: {str(e)}", "success": False}), 500
+        # Otherwise re-raise to let the global handler deal with it
+        raise
 
 @app.route('/ask', methods=['POST'])
 def ask():
-    data = request.json
-    question = data.get('question', '')
-    
-    if not question:
-        return jsonify({"error": "No question provided"}), 400
-    
     try:
-        # Step 1: Select the most relevant text source
-        selected_source, explanation = select_relevant_text(question)
+        data = request.json
+        app.logger.info(f"Received question: {data}")
         
-        # Step 2: Get relevant texts from the selected source
-        text_content, selection_reason, total_tokens = get_texts_from_subfolder(selected_source, question)
+        question = data.get('question', '')
         
-        if not text_content:
-            return jsonify({
-                "error": f"No text files found in {os.path.join(BASE_DIR, selected_source)}. Please check the directory structure."
-            }), 500
+        if not question:
+            return jsonify({"error": "No question provided"}), 400
         
-        # Step 3: Get the answer from Gemini with the context
         try:
-            answer = answer_question_with_context(question, selected_source, text_content)
+            app.logger.info("Starting to select relevant text source")
+            # Step 1: Select the most relevant text source
+            selected_source, explanation = select_relevant_text(question)
+            app.logger.info(f"Selected source: {selected_source}")
             
-            return jsonify({
-                "answer": answer,
-                "selected_source": selected_source,
-                "source_explanation": explanation,
-                "selection_reason": selection_reason,
-                "file_count": len(text_content),
-                "total_tokens": total_tokens
-            })
-        except Exception as e:
-            # Handle Gemini API errors
-            error_msg = str(e)
-            if "string did not match the expected pattern" in error_msg:
-                return jsonify({"error": "The Gemini AI model couldn't properly format its response. Please try rephrasing your question."}), 500
-            else:
-                return jsonify({"error": f"Error from AI model: {error_msg}"}), 500
+            app.logger.info(f"Getting texts from {selected_source}")
+            # Step 2: Get relevant texts from the selected source
+            text_content, selection_reason, total_tokens = get_texts_from_subfolder(selected_source, question)
+            app.logger.info(f"Got {len(text_content)} text files, {total_tokens} tokens")
+            
+            if not text_content:
+                return jsonify({
+                    "error": f"No text files found in {os.path.join(BASE_DIR, selected_source)}. Please check the directory structure."
+                }), 500
+            
+            app.logger.info("Getting answer from Gemini")
+            # Step 3: Get the answer from Gemini with the context
+            try:
+                answer = answer_question_with_context(question, selected_source, text_content)
+                app.logger.info("Successfully got answer from Gemini")
                 
+                return jsonify({
+                    "answer": answer,
+                    "selected_source": selected_source,
+                    "source_explanation": explanation,
+                    "selection_reason": selection_reason,
+                    "file_count": len(text_content),
+                    "total_tokens": total_tokens
+                })
+            except Exception as e:
+                # Handle Gemini API errors
+                error_msg = str(e)
+                app.logger.error(f"Gemini API error: {error_msg}")
+                if "string did not match the expected pattern" in error_msg:
+                    return jsonify({"error": "The Gemini AI model couldn't properly format its response. Please try rephrasing your question."}), 500
+                else:
+                    return jsonify({"error": f"Error from AI model: {error_msg}"}), 500
+                    
+        except Exception as e:
+            # Catch all other errors
+            app.logger.error(f"Error processing request: {str(e)}")
+            return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+            
     except Exception as e:
-        # Catch all other errors
-        app.logger.error(f"Error processing request: {str(e)}")
-        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+        app.logger.error(f"Exception in /ask route: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080))) 
