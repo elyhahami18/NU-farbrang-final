@@ -1,6 +1,78 @@
-.git
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# Large text files and data
+txt/Chasidut/Chabad/**/*.txt
+!txt/Chasidut/Chabad/**/README.txt
+
+# Test files
 tests/
+test/
+testing/
+coverage/
+.coverage
+htmlcov/
+
+# Documentation
 docs/
 *.md
-*.log
-*.csv
+!README.md
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.pytest_cache/
+
+# Git
+.git/
+.gitignore
+
+# Node (if any frontend dependencies)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so 
