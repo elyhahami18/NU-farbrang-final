@@ -47,10 +47,9 @@ venv.bak/
 logs/
 *.log.*
 
-# Large text files and data
-txt/Chasidut/Chabad/**/*.txt
-!txt/Chasidut/Chabad/**/README.txt
-
+# Large data files - exclude all text files in txt directory
+txt/**/*.txt
+!txt/**/README.txt
 
 # Test files
 tests/
