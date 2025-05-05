@@ -52,7 +52,6 @@ txt/Chasidut/Chabad/**/*.txt
 !txt/Chasidut/Chabad/**/README.txt
 # Exclude all txt files except essential ones
 *.txt
-!requirements.txt
 !Procfile
 !runtime.txt
 !README.txt
