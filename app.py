@@ -276,5 +276,4 @@ def ask():
     })
 
 if __name__ == "__main__":
-    # Run on all interfaces (0.0.0.0) to allow external access
-    app.run(host='0.0.0.0', port=8080, debug=True) 
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080))) 
