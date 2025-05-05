@@ -47,8 +47,17 @@ venv.bak/
 logs/
 *.log.*
 
-# Large data files - exclude all text files in txt directory
-txt/**/*.txt
+# Large data files - exclude specific text directories
+txt/Tanakh/
+txt/Midrash/
+txt/Kabbalah/
+txt/Chasidut/R' Tzadok HaKohen/
+txt/Chasidut/Piaseczno Rebbe/
+txt/Chasidut/Other Chasidut Works/
+txt/Chasidut/Izhbitz/
+txt/Chasidut/Early Works/
+txt/Chasidut/Breslov/
+# Keep README.txt files
 !txt/**/README.txt
 
 # Test files
