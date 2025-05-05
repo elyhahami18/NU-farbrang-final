@@ -90,14 +90,40 @@ async function handleSubmit(e, exampleQuestion = null) {
             body: JSON.stringify({ question }),
         });
         
+        // Check the content type to avoid JSON parse errors
+        const contentType = response.headers.get('content-type');
+        
         // Handle error response
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Something went wrong');
+            let errorMessage = 'Something went wrong';
+            
+            if (contentType && contentType.includes('application/json')) {
+                // It's JSON, safe to parse
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } else {
+                // Not JSON, probably HTML error page
+                const text = await response.text();
+                console.error('Non-JSON error response:', text);
+                
+                // Check if it's an HTML response
+                if (text.includes('<html') || text.includes('<!DOCTYPE')) {
+                    errorMessage = 'Server error: The server returned an HTML error page instead of JSON';
+                } else {
+                    errorMessage = `Server error: ${response.status} ${response.statusText}`;
+                }
+            }
+            
+            throw new Error(errorMessage);
         }
         
-        // Parse response data
-        const data = await response.json();
+        // Safely parse response data
+        let data;
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            throw new Error('Server did not return JSON data');
+        }
         
         // Remove loading indicator
         loadingIndicator.remove();
