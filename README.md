@@ -32,7 +32,7 @@ project/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/elyhahami18/nu.git
+git clone https://github.com/elyhahami18/NU-farbrang-final.git
 cd nu
 ```
 
