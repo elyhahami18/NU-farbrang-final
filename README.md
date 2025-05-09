@@ -33,7 +33,7 @@ project/
 1. Clone the repository:
 ```bash
 git clone https://github.com/elyhahami18/NU-farbrang-final.git
-cd nu
+cd NU-farbrang-final/
 ```
 
 2. Install dependencies:
